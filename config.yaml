@@ -1,0 +1,48 @@
+name: "Venus OS Local"
+version: "0.1.10"
+slug: "venus_local"
+description: >-
+  Run a local Victron Venus OS container on Home Assistant OS with direct
+  MK3-USB access for a VE.Bus MultiPlus inverter.
+arch:
+  - aarch64
+startup: "services"
+boot: "auto"
+host_network: true
+udev: true
+uart: true
+webui: "http://[HOST]:[PORT:80]/"
+watchdog: "tcp://[HOST]:[PORT:80]"
+
+ports:
+  80/tcp: 80
+  502/tcp: 502
+  1883/tcp: 1883
+
+ports_description:
+  80/tcp: "Venus OS Web UI"
+  502/tcp: "Modbus TCP"
+  1883/tcp: "MQTT"
+
+# Home Assistant does not accept a literal "ALL" token here, so the manifest
+# enumerates the full supported capability set instead.
+privileged:
+  - BPF
+  - CHECKPOINT_RESTORE
+  - DAC_READ_SEARCH
+  - IPC_LOCK
+  - NET_ADMIN
+  - NET_RAW
+  - PERFMON
+  - SYS_ADMIN
+  - SYS_MODULE
+  - SYS_NICE
+  - SYS_PTRACE
+  - SYS_RAWIO
+  - SYS_RESOURCE
+  - SYS_TIME
+
+options: {}
+
+schema:
+  serial_device: "device(subsystem=tty)?"
