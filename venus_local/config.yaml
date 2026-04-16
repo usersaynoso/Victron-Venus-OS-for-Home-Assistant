@@ -1,5 +1,5 @@
 name: "Venus OS Local"
-version: "0.2"
+version: "2.0"
 slug: "venus_local"
 description: >-
   Run a local Victron Venus OS container on Home Assistant OS with direct

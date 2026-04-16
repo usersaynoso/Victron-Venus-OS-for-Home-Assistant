@@ -18,6 +18,11 @@ if [ ! -f "${ADDON_README}" ]; then
   exit 1
 fi
 
+if [ ! -f "${ADDON_DIR}/CHANGELOG.md" ]; then
+  echo "addon CHANGELOG.md is required" >&2
+  exit 1
+fi
+
 if [ ! -f "${ADDON_DIR}/icon.png" ]; then
   echo "addon icon.png is required" >&2
   exit 1
@@ -162,6 +167,9 @@ grep -Eq 'Configuration' "${ROOT_README}"
 grep -Eq 'will not start or open the Web UI until a serial device is selected' "${ROOT_README}"
 grep -Eq 'venus_local/README\.md' "${ROOT_README}"
 grep -Eq '^# Venus OS Local for Home Assistant$' "${ADDON_README}"
+grep -Eq '^# Changelog$' "${ADDON_DIR}/CHANGELOG.md"
+grep -Eq '^## 2\.0$' "${ADDON_DIR}/CHANGELOG.md"
+grep -Eq 'Fix Home Assistant changelog support by shipping `CHANGELOG\.md` with the add-on\.' "${ADDON_DIR}/CHANGELOG.md"
 grep -Eq '^## What You Need$' "${ADDON_README}"
 grep -Eq '^## Quick Start$' "${ADDON_README}"
 grep -Eq '^## Install in Home Assistant$' "${ADDON_README}"
