@@ -593,6 +593,63 @@ dbus_mqtt_path.write_text(dbus_mqtt_source)
 PY
 }
 
+ensure_gui_v2_ingress_compat() {
+  patched_path="$(python3 - <<'PY'
+from pathlib import Path
+
+needle = """                let defaultMqttArg = (location.protocol === 'https:' ? 'wss://' : 'ws://') + document.location.host + '/websocket-mqtt'
+                let argumentList = needsDefaultArgs ? ['--mqtt', defaultMqttArg] : [];
+                argumentList.push(
+                    '--nodeRedUrl', 'https://' + document.location.host + ':1881',
+                    '--signalKUrl', 'http://' + document.location.host + ':3000',
+                );
+"""
+
+replacement = """                const ingressBasePath = window.location.pathname.replace(/\\/gui-v2\\/.*$/, '').replace(/\\/$/, '');
+                const mqttPath = (ingressBasePath ? ingressBasePath : '') + '/websocket-mqtt';
+                const auxHost = document.location.hostname;
+                let defaultMqttArg = (location.protocol === 'https:' ? 'wss://' : 'ws://') + document.location.host + mqttPath
+                let argumentList = needsDefaultArgs ? ['--mqtt', defaultMqttArg] : [];
+                argumentList.push(
+                    '--nodeRedUrl', 'https://' + auxHost + ':1881',
+                    '--signalKUrl', 'http://' + auxHost + ':3000',
+                );
+"""
+
+candidates = [
+    Path("/var/www"),
+    Path("/opt/victronenergy"),
+    Path("/usr/share"),
+]
+
+for root in candidates:
+    if not root.exists():
+        continue
+    for path in root.rglob("*.html"):
+        try:
+            source = path.read_text()
+        except Exception:
+            continue
+        if needle not in source:
+            continue
+        if "const ingressBasePath = window.location.pathname.replace(/\\/gui-v2\\/.*$/, '').replace(/\\/$/, '');" in source:
+            print(path, end="")
+            raise SystemExit(0)
+        path.write_text(source.replace(needle, replacement))
+        print(path, end="")
+        raise SystemExit(0)
+
+print("", end="")
+PY
+)"
+
+  if [ -n "$patched_path" ]; then
+    log "Ensured GUIv2 ingress compatibility in $patched_path"
+  else
+    log "GUIv2 HTML was not found for ingress compatibility patching."
+  fi
+}
+
 ensure_serial_starter_compat() {
   require_path /opt/victronenergy/serial-starter/serial-starter.sh
 
@@ -656,6 +713,7 @@ ensure_serial_starter_device
 ensure_unique_id
 ensure_serial_starter_compat
 ensure_dbus_mqtt_compat
+ensure_gui_v2_ingress_compat
 ensure_nginx_prereqs || true
 ensure_flashmq_config
 

@@ -1,5 +1,5 @@
 name: "Venus OS Local"
-version: "0.1.10"
+version: "0.1.12"
 slug: "venus_local"
 description: >-
   Run a local Victron Venus OS container on Home Assistant OS with direct
@@ -11,8 +11,13 @@ boot: "auto"
 host_network: true
 udev: true
 uart: true
-webui: "http://[HOST]:[PORT:80]/"
+webui: "http://[HOST]:[PORT:80]/gui-v2/"
 watchdog: "tcp://[HOST]:[PORT:80]"
+ingress: true
+ingress_port: 80
+ingress_entry: "/gui-v2/"
+panel_title: "Victron"
+panel_icon: "mdi:flash"
 
 ports:
   80/tcp: 80

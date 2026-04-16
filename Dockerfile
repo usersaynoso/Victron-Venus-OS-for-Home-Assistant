@@ -1,6 +1,6 @@
 ARG BUILD_FROM=ubuntu:24.04
 
-FROM --platform=$BUILDPLATFORM ${BUILD_FROM} AS extract
+FROM ${BUILD_FROM} AS extract
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -40,7 +40,7 @@ FROM scratch
 ENV DBUS_SYSTEM_BUS_ADDRESS=unix:path=/run/dbus/system_bus_socket
 
 COPY --from=extract /venus-rootfs/ /
-COPY --chmod=0755 run.sh /run.sh
+COPY run.sh /run.sh
 
 EXPOSE 80 502 1883
 
