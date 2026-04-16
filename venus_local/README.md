@@ -14,7 +14,7 @@ This project is currently aimed at that setup. If you are using a different Vict
 ## What You Get
 
 - Venus OS web UI in Home Assistant
-- Home Assistant sidebar: `Victron`
+- Home Assistant sidebar: `Victron VenusOS`
 - `OPEN WEB UI` support from the add-on page
 - Direct GUIv2 URL: `http://<home-assistant-host>/gui-v2/`
 - Legacy root URL: `http://<home-assistant-host>/`
@@ -29,7 +29,7 @@ This project is currently aimed at that setup. If you are using a different Vict
 3. Add `https://github.com/usersaynoso/Victron-Venus-OS-for-Home-Assistant`.
 4. Open `Venus OS Local`, go to `Configuration`, and select `serial_device`.
 5. Start the add-on after a serial device is selected.
-6. Use `OPEN WEB UI` or the `Victron` sidebar entry to open Venus.
+6. Use `OPEN WEB UI` or the `Victron VenusOS` sidebar entry to open Venus.
 
 ## Install in Home Assistant
 
@@ -48,7 +48,7 @@ https://github.com/usersaynoso/Victron-Venus-OS-for-Home-Assistant
 6. Find `Venus OS Local` in the add-on store.
 7. Open the add-on, go to `Configuration`, and select `serial_device`.
 8. Start it after a serial device is selected.
-9. Open it with `OPEN WEB UI` or from the `Victron` sidebar item.
+9. Open it with `OPEN WEB UI` or from the `Victron VenusOS` sidebar item.
 
 ## Local Install Alternative
 

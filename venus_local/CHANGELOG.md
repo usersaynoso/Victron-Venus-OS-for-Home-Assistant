@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.1
+
+- Rename the Home Assistant sidebar entry to `Victron VenusOS`.
+- Bump the add-on version to `2.0.1`.
+
 ## 2.0
 
 - Fix Home Assistant changelog support by shipping `CHANGELOG.md` with the add-on.

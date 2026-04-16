@@ -54,6 +54,7 @@ require "yaml"
 config = YAML.load_file(ARGV.fetch(0))
 
 raise "unexpected name" unless config["name"] == "Venus OS Local"
+raise "unexpected version" unless config["version"] == "2.0.1"
 raise "unexpected slug" unless config["slug"] == "venus_local"
 raise "startup must be services" unless config["startup"] == "services"
 raise "host_network must be enabled" unless config["host_network"] == true
@@ -63,7 +64,7 @@ raise "webui must target gui-v2" unless config["webui"] == "http://[HOST]:[PORT:
 raise "ingress must be enabled" unless config["ingress"] == true
 raise "ingress_port must be 80" unless config["ingress_port"] == 80
 raise "ingress_entry must target gui-v2" unless config["ingress_entry"] == "/gui-v2/"
-raise "panel_title must be Victron" unless config["panel_title"] == "Victron"
+raise "panel_title must be Victron VenusOS" unless config["panel_title"] == "Victron VenusOS"
 raise "panel_icon must be mdi:flash" unless config["panel_icon"] == "mdi:flash"
 raise "devices should not be hardcoded" if config.key?("devices")
 raise "default options should require manual serial selection" unless config["options"] == { "serial_device" => nil }
@@ -168,6 +169,9 @@ grep -Eq 'will not start or open the Web UI until a serial device is selected' "
 grep -Eq 'venus_local/README\.md' "${ROOT_README}"
 grep -Eq '^# Venus OS Local for Home Assistant$' "${ADDON_README}"
 grep -Eq '^# Changelog$' "${ADDON_DIR}/CHANGELOG.md"
+grep -Eq '^## 2\.0\.1$' "${ADDON_DIR}/CHANGELOG.md"
+grep -Eq 'Rename the Home Assistant sidebar entry to `Victron VenusOS`\.' "${ADDON_DIR}/CHANGELOG.md"
+grep -Eq 'Bump the add-on version to `2\.0\.1`\.' "${ADDON_DIR}/CHANGELOG.md"
 grep -Eq '^## 2\.0$' "${ADDON_DIR}/CHANGELOG.md"
 grep -Eq 'Fix Home Assistant changelog support by shipping `CHANGELOG\.md` with the add-on\.' "${ADDON_DIR}/CHANGELOG.md"
 grep -Eq '^## What You Need$' "${ADDON_README}"
@@ -180,7 +184,7 @@ grep -Eq 'must select `serial_device`' "${ADDON_README}"
 grep -Eq 'Do not use `/dev/ttyUSB0`\.' "${ADDON_README}"
 grep -Eq '/dev/serial/by-id/' "${ADDON_README}"
 grep -Eq '/gui-v2/' "${ADDON_README}"
-grep -Eq 'Home Assistant sidebar: `Victron`' "${ADDON_README}"
+grep -Eq 'Home Assistant sidebar: `Victron VenusOS`' "${ADDON_README}"
 grep -Eq '`OPEN WEB UI`' "${ADDON_README}"
 grep -Eq '/addons/local/venus_local' "${ADDON_README}"
 grep -Eq 'Settings > Add-ons > Add-on Store' "${ADDON_README}"
