@@ -18,6 +18,26 @@ if [ ! -f "${ADDON_README}" ]; then
   exit 1
 fi
 
+if [ ! -f "${ADDON_DIR}/icon.png" ]; then
+  echo "addon icon.png is required" >&2
+  exit 1
+fi
+
+if [ ! -f "${ADDON_DIR}/logo.png" ]; then
+  echo "addon logo.png is required" >&2
+  exit 1
+fi
+
+if [ ! -f "${ADDON_DIR}/dark_icon.png" ]; then
+  echo "addon dark_icon.png is required" >&2
+  exit 1
+fi
+
+if [ ! -f "${ADDON_DIR}/dark_logo.png" ]; then
+  echo "addon dark_logo.png is required" >&2
+  exit 1
+fi
+
 if [ ! -f "${ROOT_DIR}/repository.yaml" ]; then
   echo "repository.yaml is required" >&2
   exit 1
@@ -41,8 +61,8 @@ raise "ingress_entry must target gui-v2" unless config["ingress_entry"] == "/gui
 raise "panel_title must be Victron" unless config["panel_title"] == "Victron"
 raise "panel_icon must be mdi:flash" unless config["panel_icon"] == "mdi:flash"
 raise "devices should not be hardcoded" if config.key?("devices")
-raise "default options should be empty" unless config["options"] == {}
-raise "serial_device schema mismatch" unless config.dig("schema", "serial_device") == "device(subsystem=tty)?"
+raise "default options should require manual serial selection" unless config["options"] == { "serial_device" => nil }
+raise "serial_device schema mismatch" unless config.dig("schema", "serial_device") == "device(subsystem=tty)"
 
 expected_ports = {
   "80/tcp" => 80,
@@ -81,6 +101,44 @@ raise "unexpected repository url" unless repo["url"] == "https://github.com/user
 raise "unexpected repository maintainer" unless repo["maintainer"] == "UserSayNoSo"
 RUBY
 
+python3 - "${ADDON_DIR}/icon.png" "${ADDON_DIR}/logo.png" "${ADDON_DIR}/dark_icon.png" "${ADDON_DIR}/dark_logo.png" <<'PY'
+import struct
+import sys
+from pathlib import Path
+
+
+def png_size(path_str):
+    path = Path(path_str)
+    data = path.read_bytes()
+    signature = b"\x89PNG\r\n\x1a\n"
+    if not data.startswith(signature):
+        raise SystemExit(f"{path.name} is not a PNG")
+    if data[12:16] != b"IHDR":
+        raise SystemExit(f"{path.name} is missing an IHDR chunk")
+    width, height = struct.unpack(">II", data[16:24])
+    if width <= 0 or height <= 0:
+        raise SystemExit(f"{path.name} has invalid dimensions")
+    return width, height
+
+
+icon_width, icon_height = png_size(sys.argv[1])
+logo_width, logo_height = png_size(sys.argv[2])
+dark_icon_width, dark_icon_height = png_size(sys.argv[3])
+dark_logo_width, dark_logo_height = png_size(sys.argv[4])
+
+if icon_width != icon_height:
+    raise SystemExit("icon.png must remain square")
+
+if dark_icon_width != dark_icon_height:
+    raise SystemExit("dark_icon.png must remain square")
+
+if logo_width <= 0 or logo_height <= 0:
+    raise SystemExit("logo.png dimensions are invalid")
+
+if dark_logo_width <= 0 or dark_logo_height <= 0:
+    raise SystemExit("dark_logo.png dimensions are invalid")
+PY
+
 grep -Eq '^ARG BUILD_FROM=ubuntu:24.04$' "${ADDON_DIR}/Dockerfile"
 grep -Eq '^FROM \$\{BUILD_FROM\} AS extract$' "${ADDON_DIR}/Dockerfile"
 grep -Eq 'venus-swu-3-large-raspberrypi4\.swu' "${ADDON_DIR}/Dockerfile"
@@ -100,6 +158,8 @@ grep -Eq '^# Victron Venus OS for Home Assistant$' "${ROOT_README}"
 grep -Eq 'Settings > Add-ons > Add-on Store' "${ROOT_README}"
 grep -Eq 'choose `Repositories`' "${ROOT_README}"
 grep -Eq 'https://github.com/usersaynoso/Victron-Venus-OS-for-Home-Assistant' "${ROOT_README}"
+grep -Eq 'Configuration' "${ROOT_README}"
+grep -Eq 'will not start or open the Web UI until a serial device is selected' "${ROOT_README}"
 grep -Eq 'venus_local/README\.md' "${ROOT_README}"
 grep -Eq '^# Venus OS Local for Home Assistant$' "${ADDON_README}"
 grep -Eq '^## What You Need$' "${ADDON_README}"
@@ -107,6 +167,8 @@ grep -Eq '^## Quick Start$' "${ADDON_README}"
 grep -Eq '^## Install in Home Assistant$' "${ADDON_README}"
 grep -Eq '^## Local Install Alternative$' "${ADDON_README}"
 grep -Eq 'serial_device' "${ADDON_README}"
+grep -Eq 'Configuration' "${ADDON_README}"
+grep -Eq 'must select `serial_device`' "${ADDON_README}"
 grep -Eq 'Do not use `/dev/ttyUSB0`\.' "${ADDON_README}"
 grep -Eq '/dev/serial/by-id/' "${ADDON_README}"
 grep -Eq '/gui-v2/' "${ADDON_README}"
@@ -139,14 +201,13 @@ grep -Eq '^MQTT_BOOTSTRAP_PID=""$' "${ADDON_DIR}/run.sh"
 grep -Eq '^SERIAL_DEVICE="\$\{SERIAL_DEVICE:-\}"$' "${ADDON_DIR}/run.sh"
 grep -Eq 'localsettings\.py --path=/data/conf &' "${ADDON_DIR}/run.sh"
 grep -Eq 'load_serial_device_from_options' "${ADDON_DIR}/run.sh"
-grep -Eq 'autodetect_serial_device' "${ADDON_DIR}/run.sh"
 grep -Eq 'ensure_gui_v2_ingress_compat' "${ADDON_DIR}/run.sh"
 grep -Eq '/data/options\.json' "${ADDON_DIR}/run.sh"
 grep -Eq '/dev/serial/by-id/' "${ADDON_DIR}/run.sh"
 grep -Eq 'os\.path\.realpath' "${ADDON_DIR}/run.sh"
 grep -Eq '/run/serial-starter-devices' "${ADDON_DIR}/run.sh"
 grep -Eq 'Linked \$SERIAL_STARTER_DEVICE_DIR/' "${ADDON_DIR}/run.sh"
-grep -Eq 'No serial device configured\. Set the add-on serial_device option' "${ADDON_DIR}/run.sh"
+grep -Eq 'No serial device selected in Configuration\. Choose a stable path under /dev/serial/by-id/ before starting or opening the Web UI\.' "${ADDON_DIR}/run.sh"
 grep -Eq '/data/conf/venus-local-unique-id' "${ADDON_DIR}/run.sh"
 grep -Eq '/sbin/get-unique-id' "${ADDON_DIR}/run.sh"
 grep -Eq 'Using unique VRM identifier' "${ADDON_DIR}/run.sh"
@@ -238,6 +299,10 @@ grep -Eq 'Modbus TCP is not ready yet; continuing so the web UI remains availabl
 grep -Eq 'Ignore AC Input registers are ready to vibe' "${ADDON_DIR}/run.sh"
 if grep -Eq '^enable_service serial-starter ' "${ADDON_DIR}/run.sh"; then
   echo "run.sh must not enable serial-starter alongside direct mk2-dbus startup" >&2
+  exit 1
+fi
+if grep -Eq 'autodetect_serial_device' "${ADDON_DIR}/run.sh"; then
+  echo "run.sh must not auto-detect a serial device; the user must select it in Configuration" >&2
   exit 1
 fi
 if grep -Eq '^restart_serial_starter \|\| true$' "${ADDON_DIR}/run.sh"; then

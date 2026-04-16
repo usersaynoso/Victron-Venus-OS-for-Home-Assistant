@@ -27,8 +27,9 @@ This project is currently aimed at that setup. If you are using a different Vict
 1. In Home Assistant, go to `Settings > Add-ons > Add-on Store`.
 2. Open the menu in the top-right and choose `Repositories`.
 3. Add `https://github.com/usersaynoso/Victron-Venus-OS-for-Home-Assistant`.
-4. Open `Venus OS Local`, set `serial_device`, and start the add-on.
-5. Use `OPEN WEB UI` or the `Victron` sidebar entry to open Venus.
+4. Open `Venus OS Local`, go to `Configuration`, and select `serial_device`.
+5. Start the add-on after a serial device is selected.
+6. Use `OPEN WEB UI` or the `Victron` sidebar entry to open Venus.
 
 ## Install in Home Assistant
 
@@ -45,8 +46,9 @@ https://github.com/usersaynoso/Victron-Venus-OS-for-Home-Assistant
 
 5. Confirm the repository was added.
 6. Find `Venus OS Local` in the add-on store.
-7. Open the add-on, set `serial_device`, and start it.
-8. Open it with `OPEN WEB UI` or from the `Victron` sidebar item.
+7. Open the add-on, go to `Configuration`, and select `serial_device`.
+8. Start it after a serial device is selected.
+9. Open it with `OPEN WEB UI` or from the `Victron` sidebar item.
 
 ## Local Install Alternative
 
@@ -76,7 +78,8 @@ Use `/dev/serial/by-id/...` instead, for example:
 serial_device: /dev/serial/by-id/usb-VictronEnergy_MK3-USB_Interface_HQ22457CDAZ-if00-port0
 ```
 
-If you leave `serial_device` blank, the add-on will try to auto-detect a matching device under `/dev/serial/by-id/`.
+You must select `serial_device` in the add-on `Configuration` tab before starting the add-on.
+If no serial device is selected, the add-on will stay stopped and `OPEN WEB UI` will remain unavailable.
 
 To check the device path on the Home Assistant host:
 
@@ -101,6 +104,7 @@ ls -l /dev/serial/by-id
 ### The UI does not open
 
 - Check the add-on logs in Home Assistant.
+- Confirm you selected `serial_device` in `Configuration` before starting the add-on.
 - Make sure the host answers on port `80`.
 - Try the direct URL: `http://<home-assistant-host>/gui-v2/`
 

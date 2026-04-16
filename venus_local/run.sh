@@ -24,7 +24,7 @@ log() {
   echo "[venus_local] $*"
 }
 
-log "Launcher build 2026-04-16.9"
+log "Launcher build 2026-04-16.10"
 
 cleanup() {
   for pid in "$LOCALSETTINGS_PID" "$SERIAL_SCAN_PID" "$PHP_FPM_PID" "$NGINX_PID" "$FLASHMQ_PID" "$DBUS_MQTT_PID" "$MODBUSTCP_PID" "$MK2_DBUS_PID" "$SYSTEMCALC_PID" "$PLATFORM_PID" "$MQTT_BOOTSTRAP_PID" "$SVSCANBOOT_PID"; do
@@ -66,22 +66,6 @@ else:
     print(value, end="")
 PY
 )"
-}
-
-autodetect_serial_device() {
-  if [ -n "$SERIAL_DEVICE" ]; then
-    return 0
-  fi
-
-  for candidate in /dev/serial/by-id/*VictronEnergy*MK3* /dev/serial/by-id/*; do
-    if [ -e "$candidate" ]; then
-      SERIAL_DEVICE="$candidate"
-      log "Auto-detected serial device at $SERIAL_DEVICE"
-      return 0
-    fi
-  done
-
-  return 1
 }
 
 resolve_serial_tty() {
@@ -687,10 +671,9 @@ mkdir -p \
 echo "container" >/tmp/last_boot_type
 
 load_serial_device_from_options
-autodetect_serial_device || true
 
 if [ -z "$SERIAL_DEVICE" ]; then
-  log "No serial device configured. Set the add-on serial_device option to a stable path under /dev/serial/by-id/."
+  log "No serial device selected in Configuration. Choose a stable path under /dev/serial/by-id/ before starting or opening the Web UI."
   ls -l /dev/serial/by-id 2>/dev/null || true
   exit 1
 fi

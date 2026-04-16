@@ -1,5 +1,5 @@
 name: "Venus OS Local"
-version: "0.1.12"
+version: "0.2"
 slug: "venus_local"
 description: >-
   Run a local Victron Venus OS container on Home Assistant OS with direct
@@ -47,7 +47,8 @@ privileged:
   - SYS_RESOURCE
   - SYS_TIME
 
-options: {}
+options:
+  serial_device: null
 
 schema:
-  serial_device: "device(subsystem=tty)?"
+  serial_device: "device(subsystem=tty)"

@@ -15,7 +15,7 @@ https://github.com/usersaynoso/Victron-Venus-OS-for-Home-Assistant
 ```
 
 4. Find `Venus OS Local` in the add-on store.
-5. Open it, set `serial_device`, and start it.
+5. Open it, choose a `serial_device` in `Configuration`, then start it. The add-on will not start or open the Web UI until a serial device is selected.
 
 ## Repository Layout
 
