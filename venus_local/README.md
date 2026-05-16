@@ -16,6 +16,7 @@ This project is currently aimed at that setup. If you are using a different Vict
 - Venus OS web UI in Home Assistant
 - Home Assistant sidebar: `Victron VenusOS`
 - `OPEN WEB UI` support from the add-on page
+- Sidebar loads the static Venus screen bundle through Victron's web app download path for better browser caching
 - Direct GUIv2 URL: `http://<home-assistant-host>/gui-v2/`
 - Legacy root URL: `http://<home-assistant-host>/`
 - Modbus TCP: `<home-assistant-host>:502`
@@ -90,6 +91,7 @@ ls -l /dev/serial/by-id
 ## First Run Notes
 
 - The first `gui-v2` load can take a little longer while values appear.
+- The sidebar may fetch the static Venus screen bundle from Victron's servers so it does not need to start from scratch every time. Your live Venus values still stay local through Home Assistant.
 - Give the add-on about a minute on first start so retained MQTT values can populate.
 - `OPEN WEB UI` goes to `/gui-v2/`.
 
