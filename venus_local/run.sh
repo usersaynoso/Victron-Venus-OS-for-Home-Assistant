@@ -24,7 +24,7 @@ log() {
   echo "[venus_local] $*"
 }
 
-log "Launcher build 2026-04-16.10"
+log "Launcher build 2026-11-05.1"
 
 cleanup() {
   for pid in "$LOCALSETTINGS_PID" "$SERIAL_SCAN_PID" "$PHP_FPM_PID" "$NGINX_PID" "$FLASHMQ_PID" "$DBUS_MQTT_PID" "$MODBUSTCP_PID" "$MK2_DBUS_PID" "$SYSTEMCALC_PID" "$PLATFORM_PID" "$MQTT_BOOTSTRAP_PID" "$SVSCANBOOT_PID"; do
@@ -581,24 +581,19 @@ ensure_gui_v2_ingress_compat() {
   patched_path="$(python3 - <<'PY'
 from pathlib import Path
 
-needle = """                let defaultMqttArg = (location.protocol === 'https:' ? 'wss://' : 'ws://') + document.location.host + '/websocket-mqtt'
-                let argumentList = needsDefaultArgs ? ['--mqtt', defaultMqttArg] : [];
-                argumentList.push(
-                    '--nodeRedUrl', 'https://' + document.location.host + ':1881',
-                    '--signalKUrl', 'http://' + document.location.host + ':3000',
-                );
-"""
-
-replacement = """                const ingressBasePath = window.location.pathname.replace(/\\/gui-v2\\/.*$/, '').replace(/\\/$/, '');
-                const mqttPath = (ingressBasePath ? ingressBasePath : '') + '/websocket-mqtt';
-                const auxHost = document.location.hostname;
-                let defaultMqttArg = (location.protocol === 'https:' ? 'wss://' : 'ws://') + document.location.host + mqttPath
-                let argumentList = needsDefaultArgs ? ['--mqtt', defaultMqttArg] : [];
-                argumentList.push(
-                    '--nodeRedUrl', 'https://' + auxHost + ':1881',
-                    '--signalKUrl', 'http://' + auxHost + ':3000',
-                );
-"""
+# Patch individual expressions rather than the whole startup block, because
+# Victron reshuffles the surrounding GUIv2 HTML between releases.
+mqtt_old = "document.location.host + '/websocket-mqtt'"
+mqtt_new = (
+    "document.location.host"
+    " + window.location.pathname.replace(/\\/gui-v2\\/.*$/, '').replace(/\\/$/, '')"
+    " + '/websocket-mqtt'"
+)
+already_patched = "window.location.pathname.replace(/\\/gui-v2\\/"
+aux_replacements = (
+    ("'https://' + document.location.host + ':1881'", "'https://' + document.location.hostname + ':1881'"),
+    ("'http://' + document.location.host + ':3000'", "'http://' + document.location.hostname + ':3000'"),
+)
 
 candidates = [
     Path("/var/www"),
@@ -614,12 +609,15 @@ for root in candidates:
             source = path.read_text()
         except Exception:
             continue
-        if needle not in source:
-            continue
-        if "const ingressBasePath = window.location.pathname.replace(/\\/gui-v2\\/.*$/, '').replace(/\\/$/, '');" in source:
+        if already_patched in source:
             print(path, end="")
             raise SystemExit(0)
-        path.write_text(source.replace(needle, replacement))
+        if mqtt_old not in source:
+            continue
+        source = source.replace(mqtt_old, mqtt_new)
+        for old, new in aux_replacements:
+            source = source.replace(old, new)
+        path.write_text(source)
         print(path, end="")
         raise SystemExit(0)
 
