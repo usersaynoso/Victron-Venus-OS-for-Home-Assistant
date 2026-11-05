@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.4
+
+- Start `hub4control` so ESS actually runs its control loop and follows setpoints.
+- Start `vrmlogger` and create the `/data/db` and `/data/home` folders it needs, so data reaches the VRM Portal instead of crash-looping.
+- Start `mqtt-rpc` so VRM Remote Console and Remote VEConfigure can work. Venus only writes the VRM bridge config when the VRM access level changes, so you may need to switch it (for example Read-only to Full) once after updating.
+- Keep the VRM Portal ID the same across restarts. The ID is now saved on first start and reused, and is taken from a physical network card rather than whichever interface turned up first. Expect it to settle on a new value once after this update.
+- Thanks to @tony501987 for tracking all of these down.
+- Bump the add-on version to `2.0.4`.
+
 ## 2.0.3
 
 - Fix the boot loop on Venus OS v3.85 and later (`Required path is missing: /opt/victronenergy/dbus-mqtt/mqtt_gobject_bridge.py`). Victron removed dbus-mqtt from the image, so the build now restores dbus-mqtt v1.36 from Victron's GitHub when it is missing.

@@ -24,7 +24,7 @@ log() {
   echo "[venus_local] $*"
 }
 
-log "Launcher build 2026-11-05.1"
+log "Launcher build 2026-11-05.2"
 
 cleanup() {
   for pid in "$LOCALSETTINGS_PID" "$SERIAL_SCAN_PID" "$PHP_FPM_PID" "$NGINX_PID" "$FLASHMQ_PID" "$DBUS_MQTT_PID" "$MODBUSTCP_PID" "$MK2_DBUS_PID" "$SYSTEMCALC_PID" "$PLATFORM_PID" "$MQTT_BOOTSTRAP_PID" "$SVSCANBOOT_PID"; do
@@ -491,26 +491,32 @@ from pathlib import Path
 id_path = Path(sys.argv[1])
 serial_device = sys.argv[2]
 
-for candidate in Path("/sys/class/net").glob("*/address"):
-    iface = candidate.parent.name
-    if iface == "lo":
-        continue
-    try:
-        mac = re.sub(r"[^0-9A-Fa-f]", "", candidate.read_text()).lower()
-    except OSError:
-        continue
-    if len(mac) == 12:
-        print(mac, end="")
-        raise SystemExit(0)
-
+# Reuse the persisted identifier so the VRM Portal ID survives restarts.
 if id_path.is_file():
     persisted = re.sub(r"[^0-9A-Fa-f]", "", id_path.read_text()).lower()
     if len(persisted) == 12:
         print(persisted, end="")
         raise SystemExit(0)
 
-seed = serial_device or ""
-generated = hashlib.sha256(seed.encode("utf-8")).hexdigest()[:12]
+# First start: derive one from a physical NIC (Docker and veth interfaces get
+# random MACs) and persist it, falling back to a hash of the serial device.
+generated = ""
+for candidate in sorted(Path("/sys/class/net").glob("*/address")):
+    iface = candidate.parent.name
+    if iface == "lo" or not (candidate.parent / "device").exists():
+        continue
+    try:
+        mac = re.sub(r"[^0-9A-Fa-f]", "", candidate.read_text()).lower()
+    except OSError:
+        continue
+    if len(mac) == 12 and mac != "000000000000":
+        generated = mac
+        break
+
+if not generated:
+    seed = serial_device or ""
+    generated = hashlib.sha256(seed.encode("utf-8")).hexdigest()[:12]
+
 id_path.write_text(generated + "\n")
 print(generated, end="")
 PY
@@ -652,7 +658,11 @@ PY
 mkdir -p \
   /data \
   /data/conf \
+  /data/conf/flashmq.d \
+  /data/conf/mosquitto.d \
   /data/conf/serial-starter.d \
+  /data/db \
+  /data/home \
   /data/keys \
   /data/var/lib/mk2-dbus \
   /data/var/lib/serial-starter \
@@ -709,6 +719,9 @@ log "Starting localsettings"
 LOCALSETTINGS_PID=$!
 
 enable_service nginx /opt/victronenergy/service/nginx
+enable_service hub4control /opt/victronenergy/service/hub4control
+enable_service vrmlogger /opt/victronenergy/service/vrmlogger
+enable_template_service mqtt-rpc /opt/victronenergy/service-templates/mqtt-rpc
 
 if [ -x /usr/sbin/php-fpm ]; then
   log "Starting php-fpm"
